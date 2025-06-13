@@ -1,3 +1,4 @@
+// server/controllers/collection.controller.js
 const CollectionItem = require('../models/CollectionItem');
 const Guide = require('../models/Guide');
 const ForumPost = require('../models/ForumPost');
@@ -18,17 +19,13 @@ const getUserCollection = async (req, res) => {
     const collectionItems = await CollectionItem.find(query).sort({ savedAt: -1 });
 
     // Populate the actual items based on their type
-    // This part can get complex. We'll fetch details for each item type separately.
     const populatedCollection = await Promise.all(collectionItems.map(async (item) => {
       let populatedItem = null;
       if (item.itemType === 'library') {
-        // Fetch Guide and select necessary fields
         populatedItem = await Guide.findById(item.itemId).select('title slug description category');
       } else if (item.itemType === 'forum') {
-        // Fetch ForumPost and select necessary fields
         populatedItem = await ForumPost.findById(item.itemId).select('title author category createdAt').populate('author', 'username');
       } else if (item.itemType === 'marketplace') {
-        // Fetch Listing and select necessary fields
         populatedItem = await Listing.findById(item.itemId).select('title price images condition').populate('seller', 'username');
       }
 
@@ -40,10 +37,9 @@ const getUserCollection = async (req, res) => {
           savedAt: item.savedAt
         };
       }
-      return null; // Handle cases where item might not be found (e.g., deleted)
+      return null;
     }));
 
-    // Filter out any nulls if items were not found
     res.json(populatedCollection.filter(item => item !== null));
 
   } catch (error) {
@@ -51,6 +47,61 @@ const getUserCollection = async (req, res) => {
   }
 };
 
+// @desc    Add an item to the authenticated user's collection
+// @route   POST /api/collections
+// @access  Private
+const addCollectionItem = async (req, res) => {
+  const { itemId, itemType } = req.body;
+
+  if (!itemId || !itemType) {
+    return res.status(400).json({ message: 'Please provide itemId and itemType.' });
+  }
+
+  // Basic validation for itemType
+  if (!['library', 'forum', 'marketplace'].includes(itemType)) {
+    return res.status(400).json({ message: 'Invalid itemType. Must be library, forum, or marketplace.' });
+  }
+
+  try {
+    // Check if item already exists in collection for this user
+    const existingItem = await CollectionItem.findOne({
+      user: req.user._id,
+      itemId,
+      itemType
+    });
+
+    if (existingItem) {
+      return res.status(400).json({ message: `This ${itemType} item is already in your collection.` });
+    }
+
+    // You might want to verify that the itemId actually exists in its respective collection
+    // For example:
+    let itemExists = false;
+    if (itemType === 'library') itemExists = await Guide.findById(itemId);
+    else if (itemType === 'forum') itemExists = await ForumPost.findById(itemId);
+    else if (itemType === 'marketplace') itemExists = await Listing.findById(itemId);
+
+    if (!itemExists) {
+        return res.status(404).json({ message: `${itemType} item not found.` });
+    }
+
+    const newItem = new CollectionItem({
+      user: req.user._id,
+      itemId,
+      itemType
+    });
+
+    const savedItem = await newItem.save();
+    res.status(201).json(savedItem);
+
+  } catch (error) {
+    console.error('Error adding item to collection:', error);
+    res.status(500).json({ message: 'Server error during collection add', error: error.message });
+  }
+};
+
+
 module.exports = {
-  getUserCollection
+  getUserCollection,
+  addCollectionItem
 };

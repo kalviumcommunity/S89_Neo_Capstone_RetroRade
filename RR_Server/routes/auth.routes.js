@@ -1,8 +1,37 @@
+// server/routes/auth.routes.js
 const express = require('express');
 const router = express.Router();
-// Assuming auth.controller.js will handle login/register.
-// The GET /api/auth/profile will be in user.routes.js
-// so we don't have GET routes here for now.
-// Placeholder for future auth-related GET, if any.
+const { registerUser, loginUser } = require('../controllers/auth.controller');
+const { registerValidation, loginValidation, validate } = require('../utils/validation'); // Import validation utils
+const { validationResult } = require('express-validator'); // Import for use in custom middleware
+
+// @route   POST /api/auth/register
+// @desc    Register a new user
+// @access  Public
+router.post('/register', registerValidation, (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      message: 'Validation failed',
+      errors: errors.array().map(err => ({ [err.param]: err.msg }))
+    });
+  }
+  next(); // If validation passes, proceed to controller
+}, registerUser);
+
+
+// @route   POST /api/auth/login
+// @desc    Authenticate user & get token
+// @access  Public
+router.post('/login', loginValidation, (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      message: 'Validation failed',
+      errors: errors.array().map(err => ({ [err.param]: err.msg }))
+    });
+  }
+  next(); // If validation passes, proceed to controller
+}, loginUser);
 
 module.exports = router;

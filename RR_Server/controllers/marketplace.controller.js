@@ -1,3 +1,4 @@
+// server/controllers/marketplace.controller.js
 const Listing = require('../models/Listing');
 const User = require('../models/User'); // Required for user's listings
 
@@ -69,8 +70,42 @@ const getListingsByUser = async (req, res) => {
   }
 };
 
+// @desc    Create a new marketplace listing
+// @route   POST /api/marketplace/listings
+// @access  Private
+const createListing = async (req, res) => {
+  // Assuming 'upload' middleware from multer handles files, and req.body for text fields
+  const { title, description, price, category, condition } = req.body;
+  const images = req.files ? req.files.map(file => `/uploads/images/${file.filename}`) : []; // Assuming saved to uploads/images
+
+  if (!title || !description || !price || !category || !condition) {
+    return res.status(400).json({ message: 'Please fill all required fields: title, description, price, category, condition.' });
+  }
+
+  try {
+    const listing = new Listing({
+      seller: req.user._id, // Seller is the authenticated user
+      title,
+      description,
+      price,
+      category,
+      condition,
+      images
+    });
+
+    const createdListing = await listing.save();
+    res.status(201).json(createdListing);
+
+  } catch (error) {
+    console.error('Error creating listing:', error);
+    res.status(500).json({ message: 'Server error during listing creation', error: error.message });
+  }
+};
+
+
 module.exports = {
   getListings,
   getListingById,
-  getListingsByUser
+  getListingsByUser,
+  createListing
 };
