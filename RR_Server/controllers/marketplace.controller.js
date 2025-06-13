@@ -1,8 +1,14 @@
 // server/controllers/marketplace.controller.js
 const Listing = require('../models/Listing');
-const User = require('../models/User'); // Required for user's listings
+const User = require('../models/User');
 const fs = require('fs'); // For file system operations (deleting images)
 const path = require('path'); // For path manipulation
+
+// Define a clear, absolute base directory where all *valid* uploads are stored.
+// This should match the destination configured in multer in marketplace.routes.js
+// It's crucial for path validation.
+// path.join(__dirname, '..', 'uploads') navigates from 'controllers' to 'server/uploads'
+const UPLOAD_BASE_DIR = path.join(__dirname, '..', 'uploads');
 
 // @desc    Get all marketplace listings
 // @route   GET /api/marketplace/listings
@@ -190,16 +196,50 @@ const deleteListing = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this listing.' });
     }
 
-    // Delete associated images from the file system
+    // **START OF FIX FOR PATH TRAVERSAL VULNERABILITY**
     if (listing.images && listing.images.length > 0) {
-      listing.images.forEach(imagePath => {
-        const fullPath = path.join(__dirname, '..', imagePath); // Adjust path as needed
-        fs.unlink(fullPath, (err) => {
-          if (err) console.error(`Failed to delete image file: ${fullPath}`, err);
-          else console.log(`Deleted image file: ${fullPath}`);
-        });
-      });
+      for (const imagePathDb of listing.images) { // imagePathDb will be something like "/uploads/images/filename.jpg" or "https://..."
+        // Ensure imagePathDb is a local path we manage and not an external URL
+        if (!imagePathDb.startsWith('/uploads/')) {
+          console.warn(`Image path not starting with /uploads/ detected: ${imagePathDb}. Skipping local deletion.`);
+          continue; // Skip external URLs
+        }
+
+        // 1. Extract the relative path from the database string (e.g., "images/filename.jpg")
+        //    This part is crucial: we assume '/uploads/' prefix and extract only what comes after.
+        const relativeUploadPath = imagePathDb.substring('/uploads/'.length);
+
+        // 2. Construct the full absolute path to the file on disk
+        const fullPathToDelete = path.join(UPLOAD_BASE_DIR, relativeUploadPath);
+
+        // 3. **CRITICAL VALIDATION: Canonicalize and verify containment.**
+        //    path.resolve() resolves '..' and '.' segments, getting the true absolute path.
+        //    path.normalize() handles redundant separators.
+        const normalizedFullPath = path.normalize(path.resolve(fullPathToDelete));
+        const normalizedUploadBaseDir = path.normalize(path.resolve(UPLOAD_BASE_DIR));
+
+        // Check if the file's normalized path actually *starts with* the normalized base upload directory.
+        // This confirms the file is safely within the intended uploads folder.
+        // Add path.sep to normalizedUploadBaseDir to ensure it's treated as a directory boundary
+        if (normalizedFullPath.startsWith(normalizedUploadBaseDir + path.sep)) {
+          fs.unlink(normalizedFullPath, (err) => {
+            if (err) {
+              // Log the error but don't halt the overall process.
+              console.error(`Failed to delete image file: ${normalizedFullPath}. Error:`, err);
+              // In a real application, you might also update the DB to reflect deletion failure
+              // or move the image to a 'failed_deletions' quarantine.
+            } else {
+              console.log(`Successfully deleted image file: ${normalizedFullPath}`);
+            }
+          });
+        } else {
+          // This indicates a severe path traversal attempt! Log this securely.
+          console.error(`SECURITY ALERT: Path traversal attempt detected! Tried to delete: ${fullPathToDelete} (Normalized: ${normalizedFullPath}). Base: ${normalizedUploadBaseDir}. User: ${req.user._id}`);
+          // Do NOT delete the file if it's outside the allowed directory.
+        }
+      }
     }
+    // **END OF FIX FOR PATH TRAVERSAL VULNERABILITY**
 
     await listing.deleteOne();
     res.status(200).json({ message: 'Listing deleted successfully.' });
@@ -209,6 +249,7 @@ const deleteListing = async (req, res) => {
     res.status(500).json({ message: 'Server error during listing deletion', error: error.message });
   }
 };
+
 
 // @desc    Update marketplace listing status (e.g., mark as sold)
 // @route   PUT /api/marketplace/listings/:listingId/status

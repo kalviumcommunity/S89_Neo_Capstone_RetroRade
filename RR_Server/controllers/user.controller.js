@@ -1,5 +1,6 @@
 // server/controllers/user.controller.js
 const User = require('../models/User');
+const jwt = require('jsonwebtoken'); // Needed for token generation
 const bcrypt = require('bcryptjs'); // Needed for password updates
 
 // @desc    Get user profile (authenticated user)
