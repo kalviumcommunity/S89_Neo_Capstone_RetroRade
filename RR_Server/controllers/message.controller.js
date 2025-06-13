@@ -139,9 +139,85 @@ const sendMessage = async (req, res) => {
   }
 };
 
+const deleteConversation = async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ message: 'Not authorized. User not authenticated.' });
+  }
+
+  try {
+    const conversation = await Conversation.findById(req.params.conversationId);
+
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found.' });
+    }
+
+    // Only allow deletion if the authenticated user is a participant
+    if (!conversation.participants.includes(req.user._id)) {
+      return res.status(403).json({ message: 'Not authorized to delete this conversation.' });
+    }
+
+    // Delete all messages associated with this conversation
+    await Message.deleteMany({ conversation: conversation._id });
+
+    // Delete the conversation itself
+    await conversation.deleteOne();
+
+    res.status(200).json({ message: 'Conversation and all its messages deleted successfully.' });
+
+  } catch (error) {
+    console.error('Error deleting conversation:', error);
+    res.status(500).json({ message: 'Server error during conversation deletion', error: error.message });
+  }
+};
+
+// @desc    Delete a specific message within a conversation (Soft delete common in real apps)
+// @route   DELETE /api/messages/:messageId
+// @access  Private
+const deleteMessage = async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ message: 'Not authorized. User not authenticated.' });
+  }
+
+  try {
+    const message = await Message.findById(req.params.messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found.' });
+    }
+
+    // Only allow deletion if the authenticated user is the sender
+    if (message.sender.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this message.' });
+    }
+
+    // In a real chat app, you might "soft delete" (mark as deleted) instead of hard deleting
+    // for historical purposes or if it's a group chat. For simplicity, we hard delete.
+    await message.deleteOne();
+
+    // Check if parent conversation needs update (e.g., if lastMessage was deleted)
+    // This logic can be complex and is often handled by a background job or more sophisticated message management.
+    // For now, we'll just delete the message.
+    const conversation = await Conversation.findById(message.conversation);
+    if (conversation && conversation.lastMessage && conversation.lastMessage.toString() === message._id.toString()) {
+      // If the deleted message was the last one, find a new last message
+      const newLastMessage = await Message.findOne({ conversation: conversation._id }).sort({ createdAt: -1 });
+      conversation.lastMessage = newLastMessage ? newLastMessage._id : null;
+      await conversation.save();
+    }
+
+    res.status(200).json({ message: 'Message deleted successfully.' });
+
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    res.status(500).json({ message: 'Server error during message deletion', error: error.message });
+  }
+};
+
 
 module.exports = {
   getConversations,
   getMessagesInConversation,
-  sendMessage
+  sendMessage,
+  deleteConversation, // Export new function
+  deleteMessage // Export new function
 };

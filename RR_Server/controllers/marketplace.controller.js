@@ -1,6 +1,8 @@
 // server/controllers/marketplace.controller.js
 const Listing = require('../models/Listing');
 const User = require('../models/User'); // Required for user's listings
+const fs = require('fs'); // For file system operations (deleting images)
+const path = require('path'); // For path manipulation
 
 // @desc    Get all marketplace listings
 // @route   GET /api/marketplace/listings
@@ -102,10 +104,160 @@ const createListing = async (req, res) => {
   }
 };
 
+// @desc    Update a marketplace listing by ID
+// @route   PUT /api/marketplace/listings/:listingId
+// @access  Private (Owner or Admin)
+const updateListing = async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ message: 'Not authorized. User not authenticated.' });
+  }
+
+  const { title, description, price, category, condition, existingImages, newImages } = req.body;
+  const { listingId } = req.params;
+
+  try {
+    const listing = await Listing.findById(listingId);
+
+    if (!listing) {
+      return res.status(404).json({ message: 'Listing not found.' });
+    }
+
+    // Authorization: Only owner or admin can update
+    if (listing.seller.toString() !== req.user._id.toString() /* && !req.user.isAdmin */) {
+      return res.status(403).json({ message: 'Not authorized to update this listing.' });
+    }
+
+    // Handle new images from multer (req.files)
+    const uploadedNewImagePaths = req.files ? req.files.map(file => `/uploads/images/${file.filename}`) : [];
+
+    // Combine existing images (passed as a stringified array) and new uploaded images
+    let updatedImages = [];
+    if (existingImages) {
+      // Ensure existingImages is an array (it might come as a string if only one is passed)
+      try {
+        const parsedExistingImages = JSON.parse(existingImages);
+        if (Array.isArray(parsedExistingImages)) {
+          updatedImages = parsedExistingImages;
+        } else {
+          updatedImages = [parsedExistingImages]; // If it was a single string
+        }
+      } catch (e) {
+        updatedImages = [existingImages]; // If not valid JSON, treat as single string
+      }
+    }
+    updatedImages = updatedImages.concat(uploadedNewImagePaths);
+
+    // Update fields
+    listing.title = title || listing.title;
+    listing.description = description || listing.description;
+    listing.price = price || listing.price;
+    listing.category = category || listing.category;
+    listing.condition = condition || listing.condition;
+    listing.images = updatedImages; // Update the images array
+    listing.updatedAt = Date.now();
+
+    const updatedListing = await listing.save();
+    res.json(updatedListing);
+
+  } catch (error) {
+    console.error('Error updating listing:', error);
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ message: 'Validation failed from Mongoose schema', errors: messages });
+    }
+    res.status(500).json({ message: 'Server error during listing update', error: error.message });
+  }
+};
+
+
+// @desc    Delete a marketplace listing by ID
+// @route   DELETE /api/marketplace/listings/:listingId
+// @access  Private (Owner or Admin)
+const deleteListing = async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ message: 'Not authorized. User not authenticated.' });
+  }
+
+  try {
+    const listing = await Listing.findById(req.params.listingId);
+
+    if (!listing) {
+      return res.status(404).json({ message: 'Listing not found.' });
+    }
+
+    // Authorization: Only owner or admin can delete
+    if (listing.seller.toString() !== req.user._id.toString() /* && !req.user.isAdmin */) {
+      return res.status(403).json({ message: 'Not authorized to delete this listing.' });
+    }
+
+    // Delete associated images from the file system
+    if (listing.images && listing.images.length > 0) {
+      listing.images.forEach(imagePath => {
+        const fullPath = path.join(__dirname, '..', imagePath); // Adjust path as needed
+        fs.unlink(fullPath, (err) => {
+          if (err) console.error(`Failed to delete image file: ${fullPath}`, err);
+          else console.log(`Deleted image file: ${fullPath}`);
+        });
+      });
+    }
+
+    await listing.deleteOne();
+    res.status(200).json({ message: 'Listing deleted successfully.' });
+
+  } catch (error) {
+    console.error('Error deleting listing:', error);
+    res.status(500).json({ message: 'Server error during listing deletion', error: error.message });
+  }
+};
+
+// @desc    Update marketplace listing status (e.g., mark as sold)
+// @route   PUT /api/marketplace/listings/:listingId/status
+// @access  Private (Owner or Admin)
+const updateListingStatus = async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ message: 'Not authorized. User not authenticated.' });
+  }
+
+  const { isSold } = req.body;
+  const { listingId } = req.params;
+
+  // Basic validation for isSold
+  if (typeof isSold !== 'boolean') {
+    return res.status(400).json({ message: 'isSold must be a boolean value.' });
+  }
+
+  try {
+    const listing = await Listing.findById(listingId);
+
+    if (!listing) {
+      return res.status(404).json({ message: 'Listing not found.' });
+    }
+
+    // Authorization: Only owner or admin can update status
+    if (listing.seller.toString() !== req.user._id.toString() /* && !req.user.isAdmin */) {
+      return res.status(403).json({ message: 'Not authorized to update this listing status.' });
+    }
+
+    listing.isSold = isSold;
+    listing.updatedAt = Date.now();
+
+    const updatedListing = await listing.save();
+    res.json(updatedListing);
+
+  } catch (error) {
+    console.error('Error updating listing status:', error);
+    res.status(500).json({ message: 'Server error during listing status update', error: error.message });
+  }
+};
+
 
 module.exports = {
   getListings,
   getListingById,
   getListingsByUser,
-  createListing
+  createListing,
+  updateListing, // Export new function
+  deleteListing, // Export new function
+  updateListingStatus // Export new function
 };
+

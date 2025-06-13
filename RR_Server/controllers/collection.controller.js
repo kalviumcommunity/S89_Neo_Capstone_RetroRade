@@ -101,7 +101,37 @@ const addCollectionItem = async (req, res) => {
 };
 
 
+// @desc    Remove an item from the authenticated user's collection
+// @route   DELETE /api/collections/:collectionItemId
+// @access  Private
+const removeCollectionItem = async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ message: 'Not authorized. User not authenticated.' });
+  }
+
+  try {
+    const collectionItem = await CollectionItem.findById(req.params.collectionItemId);
+
+    if (!collectionItem) {
+      return res.status(404).json({ message: 'Collection item not found.' });
+    }
+
+    // Authorization: Ensure the item belongs to the authenticated user
+    if (collectionItem.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this collection item.' });
+    }
+
+    await collectionItem.deleteOne();
+    res.status(200).json({ message: 'Item removed from collection successfully.' });
+
+  } catch (error) {
+    console.error('Error removing item from collection:', error);
+    res.status(500).json({ message: 'Server error during collection item removal', error: error.message });
+  }
+};
+
 module.exports = {
   getUserCollection,
-  addCollectionItem
+  addCollectionItem,
+  removeCollectionItem // Export new function
 };
