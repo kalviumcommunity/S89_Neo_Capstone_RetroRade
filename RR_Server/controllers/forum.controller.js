@@ -1,7 +1,7 @@
 // server/controllers/forum.controller.js
 const ForumPost = require('../models/ForumPost');
 const ForumReply = require('../models/ForumReply');
-const User = require('../models/User'); // Required for user's posts
+const xss = require('xss'); // Import the xss library
 
 // @desc    Get all forum posts
 // @route   GET /api/forum/posts
@@ -31,6 +31,7 @@ const getForumPosts = async (req, res) => {
 
     res.json(posts);
   } catch (error) {
+    console.error('Error getting forum posts:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -56,6 +57,7 @@ const getForumPostById = async (req, res) => {
       res.status(404).json({ message: 'Forum post not found' });
     }
   } catch (error) {
+    console.error('Error getting forum post by ID:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -75,6 +77,7 @@ const getForumPostsByUser = async (req, res) => {
       res.status(404).json({ message: 'No forum posts found for this user' });
     }
   } catch (error) {
+    console.error('Error getting forum posts by user:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -89,10 +92,14 @@ const createForumPost = async (req, res) => {
     return res.status(400).json({ message: 'Please provide title, content, and category.' });
   }
 
+  // **FIX - XSS Sanitization**
+  const sanitizedContent = xss(content); // Sanitize content before saving
+  // **END OF FIX - XSS Sanitization**
+
   try {
     const post = new ForumPost({
       title,
-      content,
+      content: sanitizedContent, // Use sanitized content
       category,
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
       author: req.user._id // Author is the authenticated user
@@ -103,6 +110,10 @@ const createForumPost = async (req, res) => {
 
   } catch (error) {
     console.error('Error creating forum post:', error);
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ message: 'Validation failed from Mongoose schema', errors: messages });
+    }
     res.status(500).json({ message: 'Server error during post creation', error: error.message });
   }
 };
@@ -118,6 +129,10 @@ const addReplyToPost = async (req, res) => {
     return res.status(400).json({ message: 'Reply content cannot be empty.' });
   }
 
+  // **FIX - XSS Sanitization**
+  const sanitizedContent = xss(content); // Sanitize content before saving
+  // **END OF FIX - XSS Sanitization**
+
   try {
     const post = await ForumPost.findById(postId);
     if (!post) {
@@ -127,7 +142,7 @@ const addReplyToPost = async (req, res) => {
     const reply = new ForumReply({
       post: postId,
       author: req.user._id, // Author is the authenticated user
-      content
+      content: sanitizedContent // Use sanitized content
     });
 
     const createdReply = await reply.save();
@@ -143,6 +158,10 @@ const addReplyToPost = async (req, res) => {
 
   } catch (error) {
     console.error('Error adding reply to post:', error);
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ message: 'Validation failed from Mongoose schema', errors: messages });
+    }
     res.status(500).json({ message: 'Server error during reply creation', error: error.message });
   }
 };
