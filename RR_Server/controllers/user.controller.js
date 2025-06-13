@@ -1,7 +1,7 @@
 // server/controllers/user.controller.js
 const User = require('../models/User');
-const jwt = require('jsonwebtoken'); // Needed for token generation
-const bcrypt = require('bcryptjs'); // Needed for password updates
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken'); // Need jwt for re-generating token on profile update
 
 // @desc    Get user profile (authenticated user)
 // @route   GET /api/users/profile
@@ -23,7 +23,7 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// file b@desc    Get public user proy ID
+// @desc    Get public user profile by ID
 // @route   GET /api/users/:userId
 // @access  Public
 const getPublicUserProfile = async (req, res) => {
@@ -54,27 +54,37 @@ const updateUserProfile = async (req, res) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
-    // Only allow updating certain fields (username, email, bio, avatar)
-    // Password update should be a separate, more secure process
     user.username = req.body.username || user.username;
     user.email = req.body.email || user.email;
-    user.bio = req.body.bio !== undefined ? req.body.bio : user.bio; // Allow empty string
+    user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
     user.avatar = req.body.avatar || user.avatar;
 
-    // Handle password change (optional, better as a separate route with old password verification)
+    // **START OF FIX - Password Update Vulnerability**
     if (req.body.password) {
-      // For simplicity, directly hashing new password. In production, require old password.
+      const { currentPassword, password } = req.body; // New password field is 'password'
+
+      if (!currentPassword) {
+        return res.status(400).json({ message: 'Current password is required to change password.' });
+      }
+
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Current password is incorrect.' });
+      }
+
+      // Hash the new password
       const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(req.body.password, salt);
+      user.password = await bcrypt.hash(password, salt); // Use 'password' from body as new password
     }
+    // **END OF FIX - Password Update Vulnerability**
 
     const updatedUser = await user.save();
 
-    // Re-generate token if username or email changes to ensure latest info
+    // Re-generate token if essential profile fields (username, email) changed,
+    // or always generate if password changed (forces re-login with new password if not implemented separately)
     const token = jwt.sign({ id: updatedUser._id }, process.env.JWT_SECRET, {
       expiresIn: '1h'
     });
-
 
     res.json({
       _id: updatedUser._id,
