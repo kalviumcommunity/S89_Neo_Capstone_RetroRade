@@ -3,16 +3,25 @@ const express = require('express');
 const router = express.Router();
 const { getListings, getListingById, getListingsByUser, createListing } = require('../controllers/marketplace.controller');
 const { protect } = require('../middleware/authMiddleware');
-const multer = require('multer'); // Import multer for file uploads
-const path = require('path'); // Node.js built-in path module
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs'); // Import file system module
+
+// Define upload directory
+const UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'images'); // Go up one level (..) to server, then into uploads/images
+
+// Ensure upload directory exists
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true }); // Create directory and any necessary parent directories
+}
 
 // Configure Multer for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Ensure this directory exists in your server/uploads/images
-    cb(null, 'server/uploads/images/');
+    cb(null, UPLOAD_DIR); // Use the defined and ensured directory
   },
   filename: (req, file, cb) => {
+    // Generate a unique filename: fieldname-timestamp.ext
     cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
   },
 });
@@ -31,8 +40,7 @@ const upload = multer({
       cb(new Error('Only images (jpeg, jpg, png, gif) are allowed!'));
     }
   },
-});
-
+}).array('images', 5); // Allow up to 5 images
 
 // @route   GET /api/marketplace/listings
 // @desc    Get all marketplace listings (with optional filtering)
@@ -52,8 +60,18 @@ router.get('/users/:userId/listings', getListingsByUser);
 // @route   POST /api/marketplace/listings
 // @desc    Create a new marketplace listing
 // @access  Private
-// Use upload.array('images', 5) for multiple images (up to 5)
-// req.files will contain the array of uploaded files
-router.post('/listings', protect, upload.array('images', 5), createListing);
+// Use the configured upload middleware
+router.post('/listings', protect, (req, res, next) => {
+  upload(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      // A Multer error occurred when uploading.
+      return res.status(400).json({ message: 'File upload error', error: err.message });
+    } else if (err) {
+      // An unknown error occurred when uploading. (e.g., from fileFilter)
+      return res.status(400).json({ message: err.message });
+    }
+    next(); // Everything went fine, proceed to createListing controller
+  });
+}, createListing);
 
 module.exports = router;

@@ -2,12 +2,13 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+// No need to import validationResult here, it's used in the route middleware
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password } = req.body; // Validation handled by middleware
 
   try {
     // Check if user with that email already exists
@@ -37,18 +38,19 @@ const registerUser = async (req, res) => {
 
     // Generate token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h' // Token expires in 1 hour
+      expiresIn: '1h'
     });
 
     res.status(201).json({
       _id: user._id,
       username: user.username,
       email: user.email,
-      token // Send the token back
+      token
     });
 
   } catch (error) {
     console.error(error);
+    // This server error might be Mongoose validation or other unexpected errors
     res.status(500).json({ message: 'Server error during registration', error: error.message });
   }
 };
@@ -57,7 +59,7 @@ const registerUser = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body; // Validation handled by middleware
 
   try {
     // Check if user exists
@@ -74,14 +76,14 @@ const loginUser = async (req, res) => {
 
     // Generate token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h' // Token expires in 1 hour
+      expiresIn: '1h'
     });
 
     res.json({
       _id: user._id,
       username: user.username,
       email: user.email,
-      token // Send the token back
+      token
     });
 
   } catch (error) {
