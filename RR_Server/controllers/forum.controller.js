@@ -1,6 +1,7 @@
+// server/controllers/forum.controller.js
 const ForumPost = require('../models/ForumPost');
 const ForumReply = require('../models/ForumReply');
-const User = require('../models/User');
+const User = require('../models/User'); // Required for user's posts
 
 // @desc    Get all forum posts
 // @route   GET /api/forum/posts
@@ -78,9 +79,79 @@ const getForumPostsByUser = async (req, res) => {
   }
 };
 
+// @desc    Create a new forum post
+// @route   POST /api/forum/posts
+// @access  Private
+const createForumPost = async (req, res) => {
+  const { title, content, category, tags } = req.body;
+
+  if (!title || !content || !category) {
+    return res.status(400).json({ message: 'Please provide title, content, and category.' });
+  }
+
+  try {
+    const post = new ForumPost({
+      title,
+      content,
+      category,
+      tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+      author: req.user._id // Author is the authenticated user
+    });
+
+    const createdPost = await post.save();
+    res.status(201).json(createdPost);
+
+  } catch (error) {
+    console.error('Error creating forum post:', error);
+    res.status(500).json({ message: 'Server error during post creation', error: error.message });
+  }
+};
+
+// @desc    Add a reply to a forum post
+// @route   POST /api/forum/posts/:postId/replies
+// @access  Private
+const addReplyToPost = async (req, res) => {
+  const { content } = req.body;
+  const { postId } = req.params;
+
+  if (!content) {
+    return res.status(400).json({ message: 'Reply content cannot be empty.' });
+  }
+
+  try {
+    const post = await ForumPost.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Forum post not found.' });
+    }
+
+    const reply = new ForumReply({
+      post: postId,
+      author: req.user._id, // Author is the authenticated user
+      content
+    });
+
+    const createdReply = await reply.save();
+
+    // Add the reply's ID to the parent post's replies array
+    post.replies.push(createdReply._id);
+    await post.save();
+
+    // Populate author for response
+    const populatedReply = await ForumReply.findById(createdReply._id).populate('author', 'username');
+
+    res.status(201).json(populatedReply);
+
+  } catch (error) {
+    console.error('Error adding reply to post:', error);
+    res.status(500).json({ message: 'Server error during reply creation', error: error.message });
+  }
+};
+
 
 module.exports = {
   getForumPosts,
   getForumPostById,
-  getForumPostsByUser
+  getForumPostsByUser,
+  createForumPost,
+  addReplyToPost
 };

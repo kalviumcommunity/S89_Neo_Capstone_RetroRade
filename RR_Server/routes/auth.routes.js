@@ -1,8 +1,16 @@
+// server/routes/auth.routes.js
 const express = require('express');
 const router = express.Router();
-// Assuming auth.controller.js will handle login/register.
-// The GET /api/auth/profile will be in user.routes.js
-// so we don't have GET routes here for now.
-// Placeholder for future auth-related GET, if any.
+const { registerUser, loginUser } = require('../controllers/auth.controller');
+
+// @route   POST /api/auth/register
+// @desc    Register a new user
+// @access  Public
+router.post('/register', registerUser);
+
+// @route   POST /api/auth/login
+// @desc    Authenticate user & get token
+// @access  Public
+router.post('/login', loginUser);
 
 module.exports = router;
