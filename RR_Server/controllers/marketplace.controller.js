@@ -6,24 +6,20 @@ const path = require('path'); // For path manipulation
 
 // Define the absolute base directory where marketplace images are stored.
 // This should accurately point to `server/uploads/images`.
-// path.join(__dirname, '..', 'uploads', 'images') navigates from 'controllers'
-// (server/controllers/) -> (server/) -> (server/uploads/) -> (server/uploads/images/)
 const IMAGE_UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'images');
 
 // Helper function to check if a target path is safely contained within a base directory.
 // This is crucial to prevent path traversal attacks.
 const isPathInside = (targetPath, baseDir) => {
-  const resolvedBasePath = path.resolve(baseDir); // Get absolute, normalized base path
-  const resolvedTargetPath = path.resolve(targetPath); // Get absolute, normalized target path
-
-  // 1. Check if the resolved target path actually starts with the resolved base path.
-  // 2. Ensure that if they are the same length, they are identical paths (target IS base).
-  // 3. If target is longer, ensure the character immediately after the base path
-  //    in the target path is a path separator (e.g., / or \).
-  //    This prevents cases like `/path/to/baseDIRTY` being considered inside `/path/to/base`.
-  return resolvedTargetPath.startsWith(resolvedBasePath) &&
-         (resolvedTargetPath.length === resolvedBasePath.length ||
-          resolvedTargetPath[resolvedBasePath.length] === path.sep);
+  const relativePath = path.relative(baseDir, targetPath);
+  // A path is inside if:
+  // 1. path.relative does not return '..' (meaning it's not trying to go up from baseDir)
+  // 2. The relative path is not an absolute path itself (meaning it's truly relative to baseDir)
+  // 3. The relative path is not empty (meaning targetPath is not identical to baseDir,
+  //    though for file deletion, a file usually isn't the directory itself).
+  //    For deletion, we expect a file *inside* a directory.
+  // path.normalize cleans up '.' and '..' segments and resolves to canonical form.
+  return relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath);
 };
 
 
@@ -214,17 +210,16 @@ const deleteListing = async (req, res) => {
     if (listing.images && listing.images.length > 0) {
       for (const imagePathDb of listing.images) {
         // Ensure imagePathDb is a local path we manage and not an external URL (e.g., from a CDN)
-        if (!imagePathDb.startsWith('/uploads/images/')) { // More specific check for image paths
+        if (!imagePathDb.startsWith('/uploads/images/')) {
           console.warn(`Image path not matching expected local upload prefix: ${imagePathDb}. Skipping local deletion.`);
-          continue; // Skip external URLs or non-standard local paths
+          continue;
         }
 
         // Construct the full absolute path on disk
-        // We strip '/uploads/' and then join it with the absolute base directory for uploads
-        // The imagePathDb is something like '/uploads/images/filename.jpg'
-        const relativeToUploadsRoot = imagePathDb.substring('/uploads/'.length); // e.g., 'images/filename.jpg'
-        const fullPathToDelete = path.join(path.resolve(__dirname, '..', 'uploads'), relativeToUploadsRoot); // Resolves to /path/to/server/uploads/images/filename.jpg
-
+        // path.resolve(__dirname, '..', 'uploads') would resolve to the server/uploads directory
+        // Then we append the 'images/' and the filename from the database.
+        const fileName = path.basename(imagePathDb); // Extract just the filename (e.g., 'filename.jpg')
+        const fullPathToDelete = path.join(IMAGE_UPLOAD_DIR, fileName); // Use IMAGE_UPLOAD_DIR directly
 
         // **CRITICAL VALIDATION: Verify containment using the refined helper**
         if (isPathInside(fullPathToDelete, IMAGE_UPLOAD_DIR)) {
