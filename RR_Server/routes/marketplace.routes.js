@@ -1,27 +1,22 @@
 // server/routes/marketplace.routes.js
 const express = require('express');
 const router = express.Router();
-const { getListings, getListingById, getListingsByUser, createListing } = require('../controllers/marketplace.controller');
+const { getListings, getListingById, getListingsByUser, createListing, updateListing, deleteListing, updateListingStatus } = require('../controllers/marketplace.controller');
 const { protect } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs'); // Import file system module
+const fs = require('fs');
 
-// Define upload directory
-const UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'images'); // Go up one level (..) to server, then into uploads/images
-
-// Ensure upload directory exists
+const UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'images');
 if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true }); // Create directory and any necessary parent directories
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-// Configure Multer for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, UPLOAD_DIR); // Use the defined and ensured directory
+    cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
-    // Generate a unique filename: fieldname-timestamp.ext
     cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
   },
 });
@@ -40,38 +35,46 @@ const upload = multer({
       cb(new Error('Only images (jpeg, jpg, png, gif) are allowed!'));
     }
   },
-}).array('images', 5); // Allow up to 5 images
+}).array('images', 5);
 
-// @route   GET /api/marketplace/listings
-// @desc    Get all marketplace listings (with optional filtering)
-// @access  Public
+// GET/POST routes (unchanged)
 router.get('/listings', getListings);
-
-// @route   GET /api/marketplace/listings/:listingId
-// @desc    Get a single marketplace listing by ID
-// @access  Public
 router.get('/listings/:listingId', getListingById);
-
-// @route   GET /api/marketplace/users/:userId/listings
-// @desc    Get all marketplace listings by a specific user
-// @access  Public
 router.get('/users/:userId/listings', getListingsByUser);
-
-// @route   POST /api/marketplace/listings
-// @desc    Create a new marketplace listing
-// @access  Private
-// Use the configured upload middleware
 router.post('/listings', protect, (req, res, next) => {
   upload(req, res, function (err) {
     if (err instanceof multer.MulterError) {
-      // A Multer error occurred when uploading.
       return res.status(400).json({ message: 'File upload error', error: err.message });
     } else if (err) {
-      // An unknown error occurred when uploading. (e.g., from fileFilter)
       return res.status(400).json({ message: err.message });
     }
-    next(); // Everything went fine, proceed to createListing controller
+    next();
   });
 }, createListing);
+
+// @route   PUT /api/marketplace/listings/:listingId
+// @desc    Update a marketplace listing by ID
+// @access  Private (Owner or Admin)
+router.put('/listings/:listingId', protect, (req, res, next) => {
+  upload(req, res, function (err) { // Multer upload middleware for PUT
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: 'File upload error', error: err.message });
+    } else if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    next();
+  });
+}, updateListing);
+
+
+// @route   DELETE /api/marketplace/listings/:listingId
+// @desc    Delete a marketplace listing by ID
+// @access  Private (Owner or Admin)
+router.delete('/listings/:listingId', protect, deleteListing);
+
+// @route   PUT /api/marketplace/listings/:listingId/status
+// @desc    Update marketplace listing status (e.g., mark as sold)
+// @access  Private (Owner or Admin)
+router.put('/listings/:listingId/status', protect, updateListingStatus);
 
 module.exports = router;

@@ -1,32 +1,49 @@
 // server/routes/forum.routes.js
 const express = require('express');
 const router = express.Router();
-const { getForumPosts, getForumPostById, getForumPostsByUser, createForumPost, addReplyToPost } = require('../controllers/forum.controller');
+const {
+  getForumPosts,
+  getForumPostById,
+  getForumPostsByUser,
+  createForumPost,
+  updateForumPost,
+  deleteForumPost,
+  addReplyToPost,
+  updateForumReply,
+  deleteForumReply
+} = require('../controllers/forum.controller');
 const { protect } = require('../middleware/authMiddleware');
+// You might want to add specific validation for forum posts/replies here too
+// e.g., const { createForumPostValidation, updateForumPostValidation, addReplyValidation } = require('../utils/validation');
+// and use validationResult from express-validator
 
-// @route   GET /api/forum/posts
-// @desc    Get all forum posts (with optional filtering)
-// @access  Public
+// GET routes (unchanged)
 router.get('/posts', getForumPosts);
-
-// @route   GET /api/forum/posts/:postId
-// @desc    Get a single forum post with its replies
-// @access  Public
 router.get('/posts/:postId', getForumPostById);
-
-// @route   GET /api/forum/users/:userId/posts
-// @desc    Get all forum posts by a specific user
-// @access  Public
 router.get('/users/:userId/posts', getForumPostsByUser);
 
-// @route   POST /api/forum/posts
-// @desc    Create a new forum post
-// @access  Private
-router.post('/posts', protect, createForumPost);
+// POST routes (unchanged)
+router.post('/posts', protect, createForumPost); // Add validation here if needed
+router.post('/posts/:postId/replies', protect, addReplyToPost); // Add validation here if needed
 
-// @route   POST /api/forum/posts/:postId/replies
-// @desc    Add a reply to a forum post
-// @access  Private
-router.post('/posts/:postId/replies', protect, addReplyToPost);
+// @route   PUT /api/forum/posts/:postId
+// @desc    Update a forum post by ID
+// @access  Private (Owner or Admin)
+router.put('/posts/:postId', protect, updateForumPost); // Add validation here if needed
+
+// @route   DELETE /api/forum/posts/:postId
+// @desc    Delete a forum post by ID
+// @access  Private (Owner or Admin)
+router.delete('/posts/:postId', protect, deleteForumPost);
+
+// @route   PUT /api/forum/replies/:replyId
+// @desc    Update a forum reply by ID
+// @access  Private (Owner or Admin)
+router.put('/replies/:replyId', protect, updateForumReply); // Add validation here if needed
+
+// @route   DELETE /api/forum/replies/:replyId
+// @desc    Delete a forum reply by ID
+// @access  Private (Owner or Admin)
+router.delete('/replies/:replyId', protect, deleteForumReply);
 
 module.exports = router;
