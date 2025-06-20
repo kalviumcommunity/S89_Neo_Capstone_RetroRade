@@ -17,9 +17,22 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: false,
         minlength: 8
     },
+
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true // Allows for unique constraint to be applied only if the field is present
+    },
+
+    githubId: {
+        type: String,
+        unique: true,
+        sparse: true // Allows for unique constraint to be applied only if the field is present
+    },
+
     bio: {
         type: String,
         default: '',

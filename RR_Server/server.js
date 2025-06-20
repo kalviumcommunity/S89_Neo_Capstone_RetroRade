@@ -1,11 +1,17 @@
 // server/server.js
 
 // 1. Import necessary packages
-require('dotenv').config(); // Load environment variables from .env file
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path'); // Import path module for serving static files
+const path = require('path');
+
+// **START OF NEW/UPDATED CODE**
+const session = require('express-session'); // For session management (Passport needs this)
+const passport = require('passport');       // Import passport
+require('./config/passport');               // Load Passport configuration
+// **END OF NEW/UPDATED CODE**
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
@@ -14,53 +20,59 @@ const libraryRoutes = require('./routes/library.routes');
 const forumRoutes = require('./routes/forum.routes');
 const collectionRoutes = require('./routes/collection.routes');
 const marketplaceRoutes = require('./routes/marketplace.routes');
-const messageRoutes = require('./routes/message.routes'); // Uncomment if implementing messaging
+const messageRoutes = require('./routes/message.routes');
 
-// **START OF FIXES**
-
-// 2. JWT Secret Validation at startup (Before app initialization is fine)
+// JWT Secret Validation at startup
 if (!process.env.JWT_SECRET) {
   console.error('FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.');
-  process.exit(1); // Exit the process if critical environment variable is missing
+  process.exit(1);
 }
 
-// 3. Initialize Express app - THIS MUST COME BEFORE ANY app.use() CALLS
+// Initialize Express app
 const app = express();
 
-// 4. Apply middleware (now placed AFTER app initialization)
-app.use(express.json()); // Body parser for JSON requests
-app.use(cors());         // Enable CORS for all origins (adjust for production)
+// Apply middleware
+app.use(express.json());
+app.use(cors({
+  origin: 'http://localhost:3000', // Allow your React frontend
+  credentials: true // Allow cookies/sessions to be sent
+}));
 
-// Serve static uploaded files (e.g., marketplace images)
-// This makes files in server/uploads/ accessible via /uploads URL
+// **START OF NEW/UPDATED CODE - Session & Passport Middleware**
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 24 * 60 * 60 * 1000 } // 1 day
+}));
+app.use(passport.initialize());
+app.use(passport.session()); // Use passport session middleware
+// **END OF NEW/UPDATED CODE**
+
+// Serve static uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// **END OF FIXES**
-
-
-// 5. Mount routes
+// Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/collections', collectionRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
-app.use('/api/messages', messageRoutes); // Uncomment if implementing messaging
+app.use('/api/messages', messageRoutes);
 
 const PORT = process.env.PORT || 7868;
 
-// Basic root route for testing server
 app.get('/', (req, res) => {
   res.send('RetroRade Backend API is running!');
 });
 
-// Basic global error handling middleware (now correctly placed after app initialization)
+// Basic global error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke on the server!');
 });
 
-// Connect to MongoDB using Mongoose and start the server
 mongoose.connect( process.env.MONGO_URI)
 .then( () => {
     console.log( 'Connected to MongoDB' );
