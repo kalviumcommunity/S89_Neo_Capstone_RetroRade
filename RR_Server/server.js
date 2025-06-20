@@ -7,11 +7,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 
-// **START OF NEW/UPDATED CODE**
-const session = require('express-session'); // For session management (Passport needs this)
+// Removed: const session = require('express-session'); // No longer using express-session
 const passport = require('passport');       // Import passport
 require('./config/passport');               // Load Passport configuration
-// **END OF NEW/UPDATED CODE**
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
@@ -28,26 +26,33 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
+// **START OF FIX - Session Secret Validation**
+// Validate SESSION_SECRET (even if we remove express-session, it's good practice
+// if it were used elsewhere or if sessions were re-enabled in future.)
+if (!process.env.SESSION_SECRET) {
+  console.error('WARNING: SESSION_SECRET is not defined. Session security could be weak if sessions are enabled.');
+  // For a critical app, you might `process.exit(1)` here, but for development, a warning might suffice.
+}
+// **END OF FIX**
+
+
 // Initialize Express app
 const app = express();
 
 // Apply middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow your React frontend
-  credentials: true // Allow cookies/sessions to be sent
+  origin: 'http://localhost:3000', // Still allow your React frontend for future (even if not running now)
+  credentials: true // Keep for consistency if cookies are ever used for something else, or remove if strictly JWT
 }));
 
-// **START OF NEW/UPDATED CODE - Session & Passport Middleware**
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 24 * 60 * 60 * 1000 } // 1 day
-}));
-app.use(passport.initialize());
-app.use(passport.session()); // Use passport session middleware
-// **END OF NEW/UPDATED CODE**
+// **START OF FIX - Removed Session Middleware**
+// Removed: app.use(session({...}));
+// Removed: app.use(passport.session());
+// **END OF FIX**
+
+app.use(passport.initialize()); // Keep passport.initialize() as it's needed for strategies
+
 
 // Serve static uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const jwt = require('jsonwebtoken'); // Import JWT for generating token for OAuth users
+const jwt = require('jsonwebtoken');
 const { registerUser, loginUser } = require('../controllers/auth.controller');
 const { registerValidation, loginValidation } = require('../utils/validation');
 const { validationResult } = require('express-validator');
@@ -31,15 +31,13 @@ router.post('/login', loginValidation, (req, res, next) => {
 }, loginUser);
 
 // Google OAuth Routes
-// Redirect to Google for authentication
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false })); // **FIX: session: false**
 
-// Google callback route after authentication
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login', session: true }),
+  passport.authenticate('google', { failureRedirect: '/login', session: false }), // **FIX: session: false**
   (req, res) => {
-    // **START OF FIX: Send JSON response instead of redirecting to frontend**
     // On successful authentication, generate a JWT token for the user
+    // req.user is available here from Passport's strategy 'done' callback
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({
@@ -48,24 +46,20 @@ router.get('/google/callback',
         _id: req.user._id,
         username: req.user.username,
         email: req.user.email,
-        googleId: req.user.googleId // Include googleId for verification
+        googleId: req.user.googleId
       },
-      token: token // Return the JWT token
+      token: token
     });
-    // **END OF FIX**
   }
 );
 
 
 // GitHub OAuth Routes
-// Redirect to GitHub for authentication
-router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+router.get('/github', passport.authenticate('github', { scope: ['user:email'], session: false })); // **FIX: session: false**
 
-// GitHub callback route after authentication
 router.get('/github/callback',
-  passport.authenticate('github', { failureRedirect: '/login', session: true }),
+  passport.authenticate('github', { failureRedirect: '/login', session: false }), // **FIX: session: false**
   (req, res) => {
-    // **START OF FIX: Send JSON response instead of redirecting to frontend**
     // On successful authentication, generate a JWT token for the user
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
@@ -75,36 +69,25 @@ router.get('/github/callback',
         _id: req.user._id,
         username: req.user.username,
         email: req.user.email,
-        githubId: req.user.githubId // Include githubId for verification
+        githubId: req.user.githubId
       },
-      token: token // Return the JWT token
+      token: token
     });
-    // **END OF FIX**
   }
 );
 
-// Logout route
-router.get('/logout', (req, res, next) => {
-  req.logout((err) => {
-    if (err) { return next(err); }
-    req.session.destroy((err) => {
-      if (err) { return next(err); }
-      res.status(200).json({ message: 'Logged out successfully' });
-    });
-  });
+// **START OF FIX - Stateless Logout & Current User**
+// Logout route - For JWT, logout is usually handled client-side by deleting the token.
+// For API-only, we just send a success message. No server-side session to destroy.
+router.get('/logout', (req, res) => {
+  res.status(200).json({ message: 'Logout successful (JWT token should be discarded on client-side).' });
 });
 
-// Current User status (optional, for frontend to check if logged in via session)
-router.get('/current_user', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({
-      _id: req.user._id,
-      username: req.user.username,
-      email: req.user.email,
-    });
-  } else {
-    res.status(401).json({ message: 'User not authenticated' });
-  }
-});
+// Current User status - For JWT, this needs the 'protect' middleware to verify the token.
+// Removed: req.isAuthenticated() as it's session-based.
+// We'll add this to user.routes.js as it's a user profile endpoint requiring authentication.
+// It was duplicated logic anyway.
+// Removed: router.get('/current_user', ... );
+// **END OF FIX**
 
 module.exports = router;
