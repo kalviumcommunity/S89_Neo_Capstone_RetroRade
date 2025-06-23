@@ -7,9 +7,14 @@ const slugify = require('slugify');
 // @access  Public
 const getGuides = async (req, res) => {
   try {
-    const { category, tag, search } = req.query;
+    // Include resourceType in query parameters for filtering
+    const { category, tag, search, resourceType } = req.query;
     let query = {};
 
+    if (resourceType) {
+      // Filter by resource type (e.g., 'manual', 'software', 'tutorial', 'schematic')
+      query.resourceType = resourceType;
+    }
     if (category) {
       query.category = category;
     }
@@ -24,7 +29,8 @@ const getGuides = async (req, res) => {
     }
 
     const guides = await Guide.find(query)
-                               .select('title slug description category tags createdAt')
+                               // Select new fields like resourceType, downloadLink, videoLink
+                               .select('title slug description category tags resourceType createdAt downloadLink videoLink')
                                .populate('author', 'username');
 
     res.json(guides);
@@ -61,7 +67,19 @@ const createGuide = async (req, res) => {
     return res.status(401).json({ message: 'Not authorized to create a guide. User not authenticated.' });
   }
 
-  const { title, description, content, category, tags } = req.body;
+  // Include new fields from the Guide schema: resourceType, downloadLink, videoLink
+  const { title, description, content, category, tags, resourceType, downloadLink, videoLink } = req.body;
+
+  // Basic validation: resourceType is now required
+  if (!title || !content || !category || !resourceType) {
+    return res.status(400).json({ message: 'Please provide title, content, category, and resourceType.' });
+  }
+
+  // Validate resourceType against the enum defined in Guide model
+  const allowedResourceTypes = ['manual', 'schematic', 'software', 'tutorial', 'general'];
+  if (!allowedResourceTypes.includes(resourceType)) {
+      return res.status(400).json({ message: `Invalid resourceType. Must be one of: ${allowedResourceTypes.join(', ')}.` });
+  }
 
   try {
     const generatedSlug = slugify(title, { lower: true, strict: true });
@@ -71,16 +89,26 @@ const createGuide = async (req, res) => {
       return res.status(400).json({ message: 'A guide with a similar title already exists. Please choose a more unique title.' });
     }
 
-    const guide = new Guide({
+    const guideData = {
       title,
       slug: generatedSlug,
       description,
       content,
+      resourceType, // Save the resource type
       category,
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
       author: req.user._id
-    });
+    };
 
+    // Conditionally add downloadLink or videoLink based on resourceType
+    if (resourceType === 'software' || resourceType === 'manual' || resourceType === 'schematic') {
+      guideData.downloadLink = downloadLink; // Link to software, PDF manual, image of schematic, etc.
+    }
+    if (resourceType === 'tutorial') {
+      guideData.videoLink = videoLink; // Link to YouTube, Vimeo, etc.
+    }
+
+    const guide = new Guide(guideData);
     const createdGuide = await guide.save();
     res.status(201).json(createdGuide);
 
@@ -102,7 +130,8 @@ const updateGuide = async (req, res) => {
     return res.status(401).json({ message: 'Not authorized. User not authenticated.' });
   }
 
-  const { title, description, content, category, tags } = req.body;
+  // Include new fields for update
+  const { title, description, content, category, tags, resourceType, downloadLink, videoLink } = req.body;
 
   try {
     const guide = await Guide.findOne({ slug: req.params.slug });
@@ -117,7 +146,7 @@ const updateGuide = async (req, res) => {
     }
 
     // Update fields if provided
-    guide.title = title || guide.title;
+    guide.title = title !== undefined ? title : guide.title;
     if (title && guide.title !== title) { // Re-slugify if title changes
       guide.slug = slugify(title, { lower: true, strict: true });
       // Check for slug conflict if title changed
@@ -127,9 +156,34 @@ const updateGuide = async (req, res) => {
       }
     }
     guide.description = description !== undefined ? description : guide.description;
-    guide.content = content || guide.content;
-    guide.category = category || guide.category;
+    guide.content = content !== undefined ? content : guide.content;
+    guide.category = category !== undefined ? category : guide.category;
     guide.tags = tags ? tags.split(',').map(tag => tag.trim()) : guide.tags;
+    
+    // Update resourceType and related links
+    if (resourceType !== undefined) {
+      const allowedResourceTypes = ['manual', 'schematic', 'software', 'tutorial', 'general'];
+      if (!allowedResourceTypes.includes(resourceType)) {
+          return res.status(400).json({ message: `Invalid resourceType. Must be one of: ${allowedResourceTypes.join(', ')}.` });
+      }
+      guide.resourceType = resourceType;
+
+      // Clear irrelevant links when resourceType changes
+      if (resourceType === 'software' || resourceType === 'manual' || resourceType === 'schematic') {
+          guide.downloadLink = downloadLink !== undefined ? downloadLink : guide.downloadLink;
+          guide.videoLink = undefined; // Clear video link
+      } else if (resourceType === 'tutorial') {
+          guide.videoLink = videoLink !== undefined ? videoLink : guide.videoLink;
+          guide.downloadLink = undefined; // Clear download link
+      } else { // 'general' or other types
+          guide.downloadLink = undefined;
+          guide.videoLink = undefined;
+      }
+    } else { // If resourceType is not being updated, still allow updating links if provided
+        if (downloadLink !== undefined) guide.downloadLink = downloadLink;
+        if (videoLink !== undefined) guide.videoLink = videoLink;
+    }
+
     guide.updatedAt = Date.now();
 
     const updatedGuide = await guide.save();
@@ -178,6 +232,6 @@ module.exports = {
   getGuides,
   getGuideBySlug,
   createGuide,
-  updateGuide, // Export new function
-  deleteGuide // Export new function
+  updateGuide,
+  deleteGuide
 };

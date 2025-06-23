@@ -22,6 +22,14 @@ const guideSchema = new Schema({
         type: String,
         trim: true
     },
+
+    resourceType: { // Explicitly defines the type of resource for UI separation
+    type: String,
+    required: true,
+    enum: ['manual', 'schematic', 'software', 'tutorial', 'general'], // Define allowed resource types
+    default: 'general' // Default type if not specified
+  },
+
     category: {
         type: String,
         required: true,
@@ -31,6 +39,17 @@ const guideSchema = new Schema({
         type: String,
         trim: true
     }],
+
+    downloadLink: {
+        type: String,
+        trim: true
+    },
+
+    videoLink: {
+        type: String,
+        trim: true
+    },
+
     author: {
         type: Schema.Types.ObjectId,
         ref: 'User',
