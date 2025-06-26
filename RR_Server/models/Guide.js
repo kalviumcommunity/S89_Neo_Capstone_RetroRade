@@ -26,7 +26,7 @@ const guideSchema = new Schema({
     resourceType: { // Explicitly defines the type of resource for UI separation
     type: String,
     required: true,
-    enum: ['manual', 'schematic', 'software', 'tutorial', 'general'], // Define allowed resource types
+    enum: ['manual', 'schematic', 'software', 'tutorial', 'general', 'hardware'], // Define allowed resource types
     default: 'general' // Default type if not specified
   },
 
