@@ -42,7 +42,7 @@ const app = express();
 // Apply middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:3000', // Still allow your React frontend for future (even if not running now)
+  origin: 'http://localhost:5173', // Updated to match Vite dev server
   credentials: true // Keep for consistency if cookies are ever used for something else, or remove if strictly JWT
 }));
 
@@ -52,13 +52,12 @@ app.use(cors({
 // **END OF FIX**
 
 app.use(passport.initialize()); // Keep passport.initialize() as it's needed for strategies
-
+app.use('/api/auth', authRoutes);
 
 // Serve static uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Mount routes
-app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/forum', forumRoutes);
