@@ -24,6 +24,11 @@ const forumPostSchema = new Schema({
         type: String,
         trim: true
     }],
+
+    images: [{ 
+        type: String 
+    }],
+
     replies: [{
         type: Schema.Types.ObjectId,
         ref: 'ForumReply'
