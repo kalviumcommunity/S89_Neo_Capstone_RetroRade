@@ -1,31 +1,39 @@
-@font-face {
-  font-family: 'Notable';
-  src: url('./assets/Notable.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
+
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Notable&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
   margin: 0;
-  padding: 0;
-  background: #FFFBEA;
-  font-family: 'Helvetica', Arial, sans-serif;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #FFFBEA;
   color: #222;
+  font-family: 'Montserrat', Arial, sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Notable', 'Helvetica', Arial, sans-serif;
-  letter-spacing: 0.02em;
+.font-notable {
+  font-family: 'Notable', Arial, sans-serif;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  background: #FFFBEA;
-}
-::-webkit-scrollbar-thumb {
-  background: #FF9800;
-  border-radius: 4px;
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
 }
 
 
 
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}

@@ -1,24 +1,27 @@
-import React from "react";
-import profileImg from '../assets/profile.jpg';
+import { FaBars } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import styles from './Navbar.module.css';
 
-const Navbar = () => {
+export default function Navbar() {
   return (
     <nav className={styles.navbar}>
-      <div className={styles.menu}>
-        <button id="hamburger" className={styles.menu}>&#9776;</button>
-        <div className={styles.navButtons}>
-          <button className={styles.navButton}>Collection</button>
-          <button className={styles.navButton}>Library</button>
-          <button className={styles.navButton}>Community</button>
-          <button className={styles.navButton}>Marketplace</button>
+      {/* Hamburger menu */}
+      <button className={styles.hamburger}>
+        <FaBars />
+      </button>
+      {/* Center navigation links */}
+      <div className={styles.centerNav}>
+        <div className={styles.navLinks}>
+          <Link to="/collection" className={styles.link}>Collection</Link>
+          <Link to="/library" className={styles.link}>Library</Link>
+          <Link to="/community" className={styles.link}>Community</Link>
+          <Link to="/marketplace" className={styles.link}>Marketplace</Link>
         </div>
       </div>
-      <div className={styles.profile}>
-        <img src={profileImg} alt="Profile" />
+      {/* Profile avatar */}
+      <div className={styles.avatar}>
+        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}

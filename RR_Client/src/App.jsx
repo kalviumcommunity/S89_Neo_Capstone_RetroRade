@@ -1,16 +1,16 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home/Home";
+import React from 'react'
+
+import Navbar from './components/Navbar';
+import HeaderSection from './components/HeaderSection';
 
 function App() {
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        {/* Add more routes here as you build more pages */}
-      </Routes>
-    </Router>
-  );
+    <>
+      <Navbar />
+      <HeaderSection />
+    </>
+  )
 }
 
-export default App;
+export default App
