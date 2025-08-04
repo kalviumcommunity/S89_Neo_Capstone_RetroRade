@@ -7,6 +7,7 @@
   width: 100vw;
   margin-top: 0.5rem;
   z-index: 0;
+  justify-content: center;
 }
 
 .verticalLine {
@@ -21,14 +22,25 @@
   box-shadow: 2px 0 8px #ff4b2b33;
   z-index: 1;
 }
-
-.headerContent {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  z-index: 2;
+.verticalLine {
+  height: 100vh;
+  background: #FF4B2B;
+  border-radius: 8px;
+  position: fixed;
+  left: 140px;
+  top: 0;
+  box-shadow: 2px 0 8px #ff4b2b33;
+  z-index: 1;
+  transition:  0.3s ease-in-out, left 0.3s ease-in-out ;
+  width: 18px;
+  min-width: 18px;
+  max-width: 340px;
+  overflow: hidden;
+}
+.verticalLine.slideMenu {
+  left: 0;
+  width: 340px;
+  min-width: 340px;
 }
 
 .retrorade {
@@ -36,7 +48,7 @@
   font-size: 4rem;
   color: #5B2237;
   letter-spacing: 0.05em;
-  margin: 0.5rem 0 0.5rem 0;
+  margin: 0.5rem auto 0.5rem auto;
   text-shadow: 3px 4px 0 #2d0e1a22;
 }
 
