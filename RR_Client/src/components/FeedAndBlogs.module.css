@@ -1,0 +1,78 @@
+.container {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+  width: 100%;
+}
+.feedSection {
+  flex: 1;
+}
+.blogsSection {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.sectionTitle {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #222;
+}
+.feedGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+.feedItem {
+  background: #fff;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px #0001;
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.feedImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.blogCard {
+  background: #ff6f2c;
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 12px #0002;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+.blogImg {
+  width: 120px;
+  height: 120px;
+  border-radius: 1rem;
+  object-fit: cover;
+  background: #fff;
+}
+.blogContent {
+  flex: 1;
+}
+.blogTitle {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+.blogDesc {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  color: #fff;
+}
+.loading {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #888;
+}

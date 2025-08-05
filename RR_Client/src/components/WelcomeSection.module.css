@@ -1,0 +1,105 @@
+.welcomeSection {
+  width: 100%;
+  margin: 6.5rem 0 1.5rem 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  gap: 2.5rem;
+  position: relative;
+  flex-wrap: wrap;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.welcomeCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1 1 300px;
+  min-width: 0;
+  margin-left: 0;
+  box-sizing: border-box;
+  word-break: break-word;
+}
+
+.welcomeRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  margin-left: 0;
+}
+
+.welcomeMontserrat {
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  color: #111;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  text-align: left;
+  word-break: break-word;
+}
+
+.welcomeMontserratUser {
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  color: #111;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  text-align: left;
+  word-break: break-word;
+}
+
+.usernameMontserrat {
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 2.7rem;
+  color: #111;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  margin-left: 0.3rem;
+  text-shadow: 2px 3px 0 #2221;
+}
+
+.subtext {
+  margin-top: 0.2rem;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: clamp(1.1rem, 3vw, 2rem);
+  color: #222;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-align: left;
+  word-break: break-word;
+}
+.searchBarContainer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  margin-left: 5rem;
+  min-width: 0;
+  max-width: 440px;
+  flex: 1 1 320px;
+  box-sizing: border-box;
+}
+@media (max-width: 1200px) {
+  .welcomeSection {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+  .searchBarContainer {
+    margin-left: 0;
+    margin-top: 1.5rem;
+    max-width: 100%;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .welcomeCol {
+    align-items: flex-start;
+    width: 100%;
+  }
+}

@@ -1,8 +1,10 @@
+
 import { FaBars } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import styles from './Navbar.module.css';
+import defaultAvatar from '../assets/default-avatar.png';
 
-export default function Navbar({ menuOpen, setMenuOpen, isMobile }) {
+export default function Navbar({ setMenuOpen, user }) {
   return (
     <nav className={styles.navbar}>
       {/* Hamburger menu (always visible) */}
@@ -20,7 +22,11 @@ export default function Navbar({ menuOpen, setMenuOpen, isMobile }) {
       </div>
       {/* Profile avatar (hidden on mobile, shown in menu) */}
       <div className={styles.avatar}>
-        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img
+          src={user && user.avatar ? user.avatar : defaultAvatar}
+          alt="Profile"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
       </div>
     </nav>
   );
