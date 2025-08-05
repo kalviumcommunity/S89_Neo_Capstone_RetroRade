@@ -1,0 +1,68 @@
+.searchBar {
+  display: flex;
+  align-items: center;
+  background: #ffb347;
+  border: 2.5px solid #754400;
+  border-radius: 2.5rem;
+  box-shadow: 0 4px 18px #ffb34733, 2px 2px 0 #754400;
+  padding: 0.5rem 1.5rem 0.5rem 1.2rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  font-family: 'Montserrat', Arial, sans-serif;
+  transition: box-shadow 0.3s;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+  .searchBar {
+    max-width: 100%;
+    padding: 0.4rem 1rem 0.4rem 1rem;
+    font-size: 1rem;
+  }
+  .input {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .searchBar {
+    max-width: 100%;
+    min-width: 0;
+    padding: 0.3rem 0.7rem 0.3rem 0.7rem;
+    font-size: 0.95rem;
+  }
+  .input {
+    font-size: 0.95rem;
+  }
+}
+
+.searchBar:focus-within {
+  box-shadow: 0 6px 24px #ffb34755, 2px 2px 0 #ff4b2b;
+  border-color: #ff4b2b;
+}
+
+.icon {
+  color: #754400;
+  font-size: 1.2rem;
+  margin-right: 0.8rem;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1.1rem;
+  font-family: 'Montserrat', Arial, sans-serif;
+  color: #4d2c0c;
+  width: 100%;
+  padding: 0.2rem 0;
+}
+
+.input::placeholder {
+  color: #754400;
+  opacity: 1;
+}

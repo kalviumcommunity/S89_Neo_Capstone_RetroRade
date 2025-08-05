@@ -5,8 +5,9 @@ import React from 'react';
 import styles from './SideMenu.module.css';
 import { FaTimes } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import defaultAvatar from '../assets/default-avatar.png';
 
-export default function SideMenu({ open, onClose, isMobile }) {
+export default function SideMenu({ open, onClose, isMobile, user }) {
   if (!open) return null;
   const menuClass = isMobile ? styles.menuMobile : `${styles.menuDesktop} ${open ? styles.open : ''}`;
 
@@ -25,9 +26,9 @@ export default function SideMenu({ open, onClose, isMobile }) {
           </div>
           <div className={styles.profileMenu}>
             <div className={styles.profileAvatar}>
-              <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={user && user.avatar ? user.avatar : defaultAvatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <span className={styles.profileName}>User Name</span>
+            <span className={styles.profileName}>{user ? user.username : 'Guest'}</span>
           </div>
         </>
       ) : (
@@ -46,7 +47,7 @@ export default function SideMenu({ open, onClose, isMobile }) {
             <li>No new notifications</li>
           </ul>
           <button className={styles.retroButton}>
-            <span style={{fontSize: '1.5rem', display: 'flex', alignItems: 'center'}}>&#x21B8;</span> Logout
+            <span style={{fontSize: '1.5rem', display: 'flex', alignItems: 'center'}}>&#x21B8;</span> Login
           </button>
         </div>
       )}
