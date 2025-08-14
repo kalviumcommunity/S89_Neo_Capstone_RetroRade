@@ -1,5 +1,6 @@
 // Home page component
 import React, { useState, useEffect } from 'react';
+import './no-scroll.css';
 import Navbar from '../../components/Navbar';
 import SideMenu from '../../components/SideMenu';
 import HeaderSection from '../../components/HeaderSection';
@@ -33,7 +34,12 @@ export default function Home() {
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 900);
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    // Prevent scrolling on Home mount
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      document.body.style.overflow = '';
+    };
   }, []);
 
   return (
