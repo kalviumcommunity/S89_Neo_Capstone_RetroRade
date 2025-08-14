@@ -1,17 +1,28 @@
+.outerWrapper {
+  margin-left: 130px; /* adjust as needed to match orange line position */
+  width: calc(100% - 130px);
+  box-sizing: border-box;
+}
 .container {
   display: flex;
-  gap: 2rem;
+  align-items: flex-start;
+  gap: 2.5rem;
   margin-top: 2rem;
   width: 100%;
 }
 .feedSection {
-  flex: 1;
+  flex: 1 1 260px;
+  max-width: 320px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
 }
 .blogsSection {
-  flex: 2;
+  flex: 2 1 500px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
 }
 .sectionTitle {
   font-family: 'Montserrat', sans-serif;
@@ -22,32 +33,36 @@
 }
 .feedGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 1rem;
 }
 .feedItem {
   background: #fff;
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 2px 8px #0001;
-  aspect-ratio: 1/1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  box-shadow: 0 2px 8px #0002;
+  transition: transform 0.15s;
+  display: block;
+}
+.feedItem:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 6px 16px #0003;
 }
 .feedImg {
   width: 100%;
-  height: 100%;
+  height: 100px;
   object-fit: cover;
+  display: block;
 }
 .blogCard {
-  background: #ff6f2c;
+  background: linear-gradient(90deg, #ffb347 0%, #ff6f2c 100%);
   border-radius: 1.5rem;
   display: flex;
   align-items: center;
   box-shadow: 0 4px 12px #0002;
   padding: 1.5rem;
   gap: 1.5rem;
+  position: relative;
 }
 .blogImg {
   width: 120px;
@@ -60,16 +75,34 @@
   flex: 1;
 }
 .blogTitle {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 1.1rem;
+  font-family: 'Notable', 'Montserrat', sans-serif;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #fff;
+  color: #5B2237;
   margin-bottom: 0.5rem;
 }
 .blogDesc {
   font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
+  color: #222;
+}
+
+.readMoreIcon {
+  margin-left: auto;
+  font-size: 1.5rem;
   color: #fff;
+  background: #5B2237;
+  border-radius: 50%;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
 }
 .loading {
   text-align: center;
