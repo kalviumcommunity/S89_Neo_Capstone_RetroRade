@@ -1,28 +1,67 @@
+/*
+ * This CSS file contains all the styles for the RetroRade website layout.
+ * The primary goal of this update is to correctly center the 'RETRORADE' title
+ * and organize the header layout more effectively.
+ *
+ * This version of the code removes conflicting rules and uses a clean
+ * flexbox approach to align the header elements.
+ */
 
+/* General page styling to reset margins and fonts */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/*
+ * The header-container is a new addition to hold all header elements
+ * (nav, title, profile icon) and center them properly.
+ * It uses flexbox to distribute space.
+ */
+.header-container {
+  display: flex;
+  justify-content: space-between; /* Pushes content to the edges */
+  align-items: center;
+  width: 100%;
+  padding: 0 1rem; /* Add some padding on the sides */
+  position: relative;
+  z-index: 2;
+}
+
+/*
+ * The headerWrapper is used to group the navigation links.
+ * Its purpose is to sit in the middle of the header.
+ */
 .headerWrapper {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  position: relative;
-  width: 100vw;
-  margin-top: 0.5rem;
-  z-index: 0;
+  align-items: center;
   justify-content: center;
+  position: relative;
+  width: 100%;
+  z-index: 0;
 }
 
-.verticalLine {
-  width: 18px;
-  min-width: 18px;
-  height: 100vh;
-  background: #FF4B2B;
-  border-radius: 8px;
-  position: fixed;
-  left: 140px;
-  top: 0;
-  box-shadow: 2px 0 8px #ff4b2b33;
-  z-index: 1;
+/* This class is now used specifically for the navigation links. */
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  background: linear-gradient(90deg, #ffc700, #ff8c00);
+  padding: 0.5rem 2rem;
+  border-radius: 9999px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* The vertical orange line on the left side */
 .verticalLine {
+  width: 18px;
+  min-width: 18px;
   height: 100vh;
   background: #FF4B2B;
   border-radius: 8px;
@@ -31,27 +70,34 @@
   top: 0;
   box-shadow: 2px 0 8px #ff4b2b33;
   z-index: 1;
-  transition:  0.3s ease-in-out, left 0.3s ease-in-out ;
-  width: 18px;
-  min-width: 18px;
+  transition: 0.3s ease-in-out, left 0.3s ease-in-out;
   max-width: 340px;
   overflow: hidden;
 }
+
 .verticalLine.slideMenu {
   left: 0;
   width: 340px;
   min-width: 340px;
 }
 
+/*
+ * The retrorade class is now just for the text styles.
+ * The centering logic is handled by the new .header-container.
+ */
 .retrorade {
   font-family: 'Notable', Arial, sans-serif;
   font-size: 4rem;
   color: #5B2237;
   letter-spacing: 0.05em;
-  margin: 0.5rem auto 0.5rem auto;
+  margin: 0;
   text-shadow: 3px 4px 0 #2d0e1a22;
+  text-align: center;
+  width: max-content;
+  z-index: 3;
 }
 
+/* The horizontal red line below the header */
 .redLine {
   position: fixed;
   left: 0;
@@ -65,10 +111,10 @@
   z-index: 1;
 }
 
+/* Responsive styles for smaller screens */
 @media (max-width: 900px) {
-  .headerWrapper {
+  .header-container {
     flex-direction: column;
-    align-items: center;
   }
   .verticalLine {
     display: none;
@@ -79,5 +125,10 @@
   .redLine {
     height: 8px;
     top: 140px;
+  }
+  .nav-links {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    gap: 1rem;
   }
 }

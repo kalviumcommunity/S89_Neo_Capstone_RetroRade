@@ -1,0 +1,54 @@
+.mainContentContainer {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 2.5rem 2.2rem 0 2.2rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 80vh;
+  box-sizing: border-box;
+}
+
+.centralContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.feedBlogsLayout {
+  display: flex;
+  gap: 3.2rem;
+  margin-top: 1.7rem;
+}
+
+.feedColumn {
+  flex: 1 1 320px;
+  max-width: 350px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.5rem;
+}
+
+.blogsColumn {
+  flex: 2 1 500px;
+  max-width: 700px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2.7rem;
+  padding-top: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .mainContentContainer {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .feedBlogsLayout {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .feedColumn, .blogsColumn {
+    max-width: 100%;
+  }
+}

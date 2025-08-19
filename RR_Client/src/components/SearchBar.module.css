@@ -4,13 +4,15 @@
   background: #ffb347;
   border: 2.5px solid #754400;
   border-radius: 2.5rem;
-  box-shadow: 0 4px 18px #ffb34733, 2px 2px 0 #754400;
-  padding: 0.5rem 1.5rem 0.5rem 1.2rem;
+  box-shadow: 0 4px 18px #ffb34733, 2px 2px 0 #754400, 0 2px 16px 0 #ffb34755;
+  padding: 0.65rem 2rem 0.65rem 1.5rem;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   margin: 0;
   font-family: 'Montserrat', Arial, sans-serif;
+  font-weight: 600;
+  font-size: 1.08rem;
   transition: box-shadow 0.3s;
   box-sizing: border-box;
 }
