@@ -6,6 +6,7 @@ import SideMenu from '../../components/SideMenu';
 import HeaderSection from '../../components/HeaderSection';
 import WelcomeSection from '../../components/WelcomeSection';
 import FeedAndBlogs from '../../components/FeedAndBlogs';
+import styles from './Home.module.css';
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -51,9 +52,18 @@ export default function Home() {
         isMobile={isMobile}
         user={user}
       />
-      <HeaderSection slideLine={menuOpen && !isMobile} />
-      <WelcomeSection user={user} />
-      <FeedAndBlogs />
+      <div className={styles.mainContentContainer}>
+        <HeaderSection slideLine={menuOpen && !isMobile} />
+        <div className={styles.centralContent}>
+          <WelcomeSection user={user} />
+          <div className={styles.feedBlogsLayout}>
+            <FeedAndBlogs
+              feedClassName={styles.feedColumn}
+              blogsClassName={styles.blogsColumn}
+            />
+          </div>
+        </div>
+      </div>
     </>
   );
 }
