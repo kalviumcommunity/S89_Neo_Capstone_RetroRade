@@ -51,14 +51,13 @@ export default function FeedAndBlogs({ feedClassName = '', blogsClassName = '' }
         <div className={styles.sectionTitle}>Blogs</div>
         <div className={styles.blogsScrollContainer}>
           {blogs.map(blog => (
-            <div className={styles.blogCard} key={blog._id}>
-              <img src={blog.coverImage || '/assets/default-blog.png'} alt={blog.title} className={styles.blogImg} />
-              <div className={styles.blogContent}>
-                <div className={styles.blogTitle}>{blog.title || 'RESTORING YOUR FIRST GAME BOY'}</div>
-                <div className={styles.blogDesc}>{blog.description || 'A step-by-step guide to bringing your classic handheld back to life. Learn the basics of cleaning, replacing parts, and troubleshooting common issues.'}</div>
+              <div className={styles.blogCard} key={blog._id}>
+                <div className={styles.blogContent}>
+                  <div className={styles.blogTitle}>{blog.title || 'RESTORING YOUR FIRST GAME BOY'}</div>
+                  <div className={styles.blogDesc}>{blog.description || 'A step-by-step guide to bringing your classic handheld back to life. Learn the basics of cleaning, replacing parts, and troubleshooting common issues.'}</div>
+                </div>
+                <span className={styles.readMoreIcon} title="Read more">&#8594;</span>
               </div>
-              <span className={styles.readMoreIcon} title="Read more">&#8594;</span>
-            </div>
           ))}
         </div>
       </div>
