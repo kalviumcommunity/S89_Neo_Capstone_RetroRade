@@ -1,23 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import styles from './FeedAndBlogs.module.css';
 
-export default function FeedAndBlogs({ feedClassName = '', blogsClassName = '' }) {
-  // Static images for vintage electronics
-  const vintageImages = [
-    '/assets/vintage-camera.jpg',
-    '/assets/vintage-phone.jpg',
-    '/assets/vintage-radio.jpg',
-    '/assets/vintage-tv.jpg',
-    '/assets/vintage-console.jpg',
-    '/assets/vintage-laptop.jpg',
-    '/assets/vintage-walkman.jpg',
-    '/assets/vintage-camcorder.jpg',
-    '/assets/vintage-pager.jpg',
-    '/assets/vintage-cassette.jpg',
-    '/assets/vintage-pc.jpg',
-    '/assets/vintage-mac.jpg',
-  ];
+const categories = [
+  { name: 'Cameras', img: 'assets/vintage-camera.jpg' },
+  { name: 'Headphones', img: 'assets/vintage-headphones.jpg' },
+  { name: 'Games', img: 'assets/vintage-games.jpg' },
+  { name: 'Consoles', img: 'assets/vintage-console.jpg' },
+  { name: 'Watches', img: 'assets/vintage-watch.jpg' },
+  { name: 'Phones', img: 'assets/vintage-phone.jpg' },
+  { name: 'Bizarre Tech', img: 'assets/vintage-bizarre.jpg' },
+  { name: 'Laptops', img: 'assets/vintage-laptop.jpg' },
+  { name: 'PC Components', img: 'assets/vintage-pc.jpg' },
+  { name: 'Emulations', img: 'assets/vintage-emulation.jpg' },
+];
 
+export default function FeedAndBlogs({ feedClassName = '', blogsClassName = '' }) {
   // Blogs section remains dynamic (optional: keep as before or static)
   const [blogs, setBlogs] = useState([]);
   useEffect(() => {
@@ -36,12 +33,13 @@ export default function FeedAndBlogs({ feedClassName = '', blogsClassName = '' }
   return (
     <>
       <div className={feedClassName || styles.feedSection}>
-        <div className={styles.sectionTitle}>Feed</div>
+        <div className={styles.sectionTitle}>Categories</div>
         <div className={styles.feedScrollContainer}>
           <div className={styles.feedGrid}>
-            {vintageImages.map((img, idx) => (
-              <div className={styles.feedItem} key={img} title="Vintage Electronics">
-                <img src={img} alt="Vintage Electronics" className={styles.feedImg} />
+            {Array(10).fill(categories).flat().map((category, idx) => (
+              <div className={styles.feedItem} key={category.name + idx}>
+                <img src={category.img} alt={category.name} className={styles.feedImg} />
+                <div className={styles.categoryTextOverlay}>{category.name}</div>
               </div>
             ))}
           </div>
