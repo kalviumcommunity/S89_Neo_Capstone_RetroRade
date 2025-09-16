@@ -5,7 +5,7 @@ import React from 'react';
 import styles from './SideMenu.module.css';
 import { FaTimes } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import defaultAvatar from '../assets/default-avatar.png';
+import defaultAvatar from '../assets/default-avatar.jpeg';
 
 export default function SideMenu({ open, onClose, isMobile, user }) {
   if (!open) return null;
